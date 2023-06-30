@@ -1,0 +1,15 @@
+name: Sysdig - Build, scan and push Docker Image
+on: [push, repository_dispatch]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Build the Docker image
+      run: docker build . --file Dockerfile --tag sysdiglabs/dummy-vuln-app:latest
+    - name: download Sysdig scanner
+      run: wget "https://download.sysdig.com/scanning/bin/sysdig-cli-scanner/$(curl -L -s https://download.sysdig.com/scanning/sysdig-cli-scanner/latest_version.txt)/linux/amd64/sysdig-cli-scanner"
+    - name: chmod
+      run: chmod +x ./sysdig-cli-scanner
+    - name: execute Sysdig scanner
+      run: SECURE_API_TOKEN=${{secrets.SYSDIG_SECURE_TOKEN}} ./sysdig-cli-scanner --apiurl https://app.us4.sysdig.com/ sysdiglabs/dummy-vuln-app:latest
